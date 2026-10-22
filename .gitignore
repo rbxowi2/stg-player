@@ -1,0 +1,10 @@
+# created by setup.ps1
+.venv/
+third_party/
+
+# per-machine state written by the launcher
+player/settings.json
+player/build_info.txt
+
+__pycache__/
+*.pyc

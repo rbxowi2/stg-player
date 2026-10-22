@@ -1,0 +1,4 @@
+# The patch must stay byte-exact: it contains both LF and CRLF lines matching the
+# upstream files. Without this, git (core.autocrlf=true is the Windows default)
+# rewrites its line endings on commit or checkout and it no longer applies.
+*.patch -text
