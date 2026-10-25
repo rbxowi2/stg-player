@@ -121,6 +121,30 @@ LENS_STEPS = [15.0, 18.0, 21.0, 24.0, 28.0, 35.0, 50.0, 80.0]
 _POLL = hasattr(cv2, "pollKey")
 
 
+def letterbox(fr, win):
+    """Pad with black to the window's aspect ratio, **never stretch**.
+
+    `WINDOW_NORMAL` scales the image to the window size, so whenever the
+    aspect ratios differ (fullscreen, or the window dragged to another shape)
+    the picture is distorted. Padding the image to the window's ratio first
+    makes the scaling uniform. Returned unchanged when the ratios match.
+    """
+    try:
+        _, _, ww, wh = cv2.getWindowImageRect(win)
+    except cv2.error:
+        return fr
+    H, W = fr.shape[:2]
+    if ww <= 0 or wh <= 0 or abs(ww * H - wh * W) <= max(ww, wh):
+        return fr
+    if ww * H > wh * W:                 # window wider -> pad left and right
+        pad = round(H * ww / wh) - W
+        return cv2.copyMakeBorder(fr, 0, 0, pad // 2, pad - pad // 2,
+                                  cv2.BORDER_CONSTANT, value=(0, 0, 0))
+    pad = round(W * wh / ww) - H        # window taller -> pad top and bottom
+    return cv2.copyMakeBorder(fr, pad // 2, pad - pad // 2, 0, 0,
+                              cv2.BORDER_CONSTANT, value=(0, 0, 0))
+
+
 class Viewer(Scene):
     def __init__(self, ply, root, secs=None, scale=1.0):
         self.nsteps = len([d for d in os.listdir(root) if d.startswith("colmap_")])
@@ -356,7 +380,9 @@ class Viewer(Scene):
         win = (f"4DGS  {self.shot}  |  {self.model}  |  "
                f"WASD/QE move, drag look, N/M lens, SPACE pause, R reset, G fullscreen, ESC quit")
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(win, 1280, 720)
+        # Open the window at the **data's aspect ratio**. A fixed 1280x720
+        #    (16:9) made `WINDOW_NORMAL` stretch 4:3 data 33% wider.
+        cv2.resizeWindow(win, 1280, round(1280 * self.proto["H"] / self.proto["W"]))
         full = False
         cv2.setMouseCallback(win, self.on_mouse)
         prev, fps = time.time(), 0.0
@@ -376,7 +402,7 @@ class Viewer(Scene):
             dt = now - prev
             prev = now
             self.fps = 0.9 * self.fps + 0.1 / max(dt, 1e-3)
-            cv2.imshow(win, fr)
+            cv2.imshow(win, letterbox(fr, win))
 
             # **Audio is the master clock; the picture asks it where playback
             #    is** (as VLC / mpv do). The other way round, audio would chase

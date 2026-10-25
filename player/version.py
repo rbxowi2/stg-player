@@ -7,6 +7,9 @@ that mention the version point here instead of repeating it.
 only need a version number and should not pull in torch for it
 (`player_core` imports `render_at`, which costs 2 seconds and hundreds of MB).
 
+    1.1.1   the flat viewer opens its window at the data's aspect ratio and
+            pads fullscreen with black bars; a fixed 16:9 window stretched
+            4:3 data (for example Neural 3D Video) 33% wider.
     1.1.0   plays models from combined training: when window.json has
             segments, each frame shows only the Gaussians of the current
             segment (cross-fade at segment boundaries). Models without
@@ -27,4 +30,4 @@ Versioning:
     patch x.x.1   bug fix or adjustment without behaviour change
 """
 
-PLAYER_VERSION = "1.1.0"
+PLAYER_VERSION = "1.1.1"
